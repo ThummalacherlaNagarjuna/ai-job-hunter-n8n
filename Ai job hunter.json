@@ -1,0 +1,915 @@
+{
+  "name": "Ai job hunter",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d068f74b-8040-4db4-baf0-d0b5c28174c8",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "https://drive.google.com/file/d/1XdWBNzf6bZFtvXzOon58ZRjisxu4IUCD/view?usp=sharing",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "245ee802-9511-4837-986a-fe265d6a5fac",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "hUYh8Li3XNek5O70",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "c72e83d0-85d0-4808-87e4-47ac4aa3439c",
+      "name": "Extract from File",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You will receive text extracted from a PDF resume. Extract all the important information typically found in a resume, including:\n- Full name and contact information (phone, email, address if available)\n- Professional summary or objective\n- Work experience (job titles, company names, locations, dates, key responsibilities, achievements)\n- Education background (degrees, institutions, graduation dates)\n- Skills (technical skills, soft skills, languages)\n- Certifications or licenses\n- Awards, honors, or recognitions\n- Additional relevant information (projects, publications, volunteer work, etc.)\nOrganize the extracted information clearly with descriptive headings and simple lists. Format the output for easy readability and processing by another Al, avoiding unnecessary formatting or escape characters."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "48fbd72d-d067-407b-9df8-a9057c8a911e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        480,
+        208
+      ],
+      "id": "ea3c54dc-aa46-410e-8e46-8d3a428f2ff1",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "5yEa1CUvOVnYpivG",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "46304055-a0ce-4e39-8601-af9e2a6dd41d",
+              "name": "expected salary",
+              "value": "50000",
+              "type": "string"
+            },
+            {
+              "id": "ccecb4a5-a117-43f6-9f32-da84fc45bda7",
+              "name": "resume",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        0
+      ],
+      "id": "7e7af79b-c206-4aed-8d4f-9947253558e4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://remotive.com/api/remote-jobs",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "programmer"
+            },
+            {
+              "name": "num_pages",
+              "value": "10"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "50f9fe8827700dfc1cd6c02929d7f4125a55b5f5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "846f7eca-ad95-44fb-9ec8-9ddb45e004d7",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "jobs",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "8212b0cb-cd2e-40bd-9d4a-dddfbfb7d40b",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        208
+      ],
+      "id": "a27e3f21-0aa4-4e9c-88b3-76df6cd6b6c6",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -48,
+        416
+      ],
+      "id": "dfa1ff95-b0ff-4dff-a63c-9322e25f9474",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a Strict Recruitment Logic Engine. Your ONLY task is to return a valid JSON object based on a hard mathematical salary check and a conservative skill assessment.\n\n### INPUT DATA\n1. **Candidate Resume:**\n{{ $('Edit Fields').item.json.resume }}\n\n2. **Candidate Minimum Salary Floor (USD):**\n{{ $('Edit Fields').item.json['expected salary'] }}\n\n3. **Job Listing (JSON):**\n{{ JSON.stringify($json) }}\n\n---\n\n### STEP 1: DATA NORMALIZATION\nLook at the input JSON fields job_max_salary and job_min_salary.\n- IF job_max_salary > 0: JOB_CEILING = job_max_salary. STOP.\n- ELSE IF job_min_salary > 0: JOB_CEILING = job_min_salary. STOP.\n- ELSE: Parse salary text field. Remove $, commas. Replace k with 000. Pick highest number.\n- If no data found: JOB_CEILING = 0\n\n---\n\n### STEP 2: MATH COMPARISON\n- PASS: JOB_CEILING >= MIN_FLOOR\n- PASS: JOB_CEILING within 5% of MIN_FLOOR\n- FAIL: JOB_CEILING < MIN_FLOOR\n- FAIL: JOB_CEILING == 0\n\n---\n\n### STEP 3: SKILL SCORING\n- 10: Exact tech stack + experience + domain match\n- 8-9: All core skills, minor gaps only\n- 6-7: General fit but different stack or junior\n- 1-5: Missing core requirements\n- 0: Salary check failed\n\n---\n\n### EXTRACTION RULES\n1. job_description: Summarize in less than 100 words\n2. responsibilities/qualifications: \"Point 1;\\nPoint 2;\\nPoint 3\"\n3. apply_link: HTML format <a href='link'>Publisher</a>\n4. remote: Yes or No\n5. salary: original text or min-max range\n6. match_reason: explain score and skill gaps\n\n---\n\n### FINAL OUTPUT JSON\nReturn ONLY this JSON object. No explanation. No extra text.\n\n{\n  \"job_title\": \"\",\n  \"job_description\": \"\",\n  \"company\": \"\",\n  \"employment_type\": \"\",\n  \"remote\": \"\",\n  \"salary\": \"\",\n  \"benefits\": \"\",\n  \"responsibilities\": \"\",\n  \"qualifications\": \"\",\n  \"apply_link\": \"\",\n  \"match_score\": 0,\n  \"match_reason\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -560,
+        176
+      ],
+      "id": "b73add66-abda-4ff6-bbd0-b37b20cacc58",
+      "name": "job matcher"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        16,
+        864
+      ],
+      "id": "4fb717b0-d3c5-48da-8489-7233b79375e1",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "5yEa1CUvOVnYpivG",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"output\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"job_title\": {\"type\": \"string\"},\n        \"job_description\": {\"type\": \"string\"},\n        \"company\": {\"type\": \"string\"},\n        \"employment_type\": {\"type\": \"string\"},\n        \"remote\": {\"type\": \"string\"},\n        \"salary\": {\"type\": \"string\"},\n        \"benefits\": {\"type\": \"string\"},\n        \"responsibilities\": {\"type\": \"string\"},\n        \"qualifications\": {\"type\": \"string\"},\n        \"apply_link\": {\"type\": \"string\"},\n        \"match_score\": {\"type\": \"number\"},\n        \"match_reason\": {\"type\": \"string\"}\n      },\n      \"required\": [\"job_title\", \"match_score\", \"match_reason\"]\n    }\n  },\n  \"required\": [\"output\"]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        416
+      ],
+      "id": "8b9afbf2-deb7-47a1-a77b-54fa5a7c60fa",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        896
+      ],
+      "id": "f9107af6-6b9e-440c-8306-c00299e4a5b2",
+      "name": "Wait",
+      "webhookId": "13d356ab-472c-40ea-84ae-ddab236e6aba"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        688,
+        432
+      ],
+      "id": "b5691565-93f8-4b0d-b0ea-79afc95a53b3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        656
+      ],
+      "id": "233aa1c8-c060-43cc-bfde-f898800de452",
+      "name": "Wait1",
+      "webhookId": "a334ef7b-6aef-4070-a947-2667a93f19f9"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "865c3465-2513-4781-815d-26c8a3295f11",
+              "leftValue": "={{ JSON.parse($json.text).match_score }}",
+              "rightValue": "=2",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1152,
+        576
+      ],
+      "id": "008c228e-c607-4961-9f05-ac651bff4d9b",
+      "name": "if match score>= 7"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        432
+      ],
+      "id": "66a55535-76b6-4fab-b7e4-9dc215a36afd",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{JSON.stringify($json.data)}}",
+        "options": {
+          "systemMessage": "You are a professional HTML email writer.\n\nWrite a beautiful HTML email for these job matches.\n\nHere is the job data:\n{{ $('Aggregate').item.json.data }}\n\nRules:\n- Write clean HTML only\n- No markdown, no code blocks, no backticks\n- For each job create a card showing:\n  * Job Title (big and bold)\n  * Company name\n  * Match Score out of 10\n  * Salary\n  * Match Reason\n  * A real clickable Apply Now button linking to apply_link\n- Make Apply Now button green color\n- Make it mobile friendly\n- Header: \"Your AI Job Hunter Results\"\n- Footer: \"Sent automatically by AI Job Hunter\"\n\nStart HTML with <div and end with </div>\nDo not include any explanation or code blocks."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2432,
+        -256
+      ],
+      "id": "7c05da97-addf-4d7e-a459-7c39d58b02c7",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {
+          "maxTokensToSample": 500
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        592
+      ],
+      "id": "193405d0-2c88-4af0-88f8-6ff5694f6a64",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "5yEa1CUvOVnYpivG",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "output.match_reason"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        768
+      ],
+      "id": "8e3d604f-1a52-4a53-9fe4-94b637f6a5e5",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($('Aggregate1').first().json.data) }}",
+        "options": {
+          "systemMessage": "You are an HTML email designer.\nWrite a brief HTML section for jobs that did not match well.\nUse ONLY the real job data provided by the user.\nDo NOT make up fake jobs.\nDo NOT use code blocks or backticks.\n\nDesign rules:\n- Background color: #f4f4f4\n- Each job card: white background, border-left 4px solid #888888, padding 20px, margin 15px 0, border-radius 8px\n- Job title: bold, 16px, color #333333\n- Match score: shown in gray badge\n- Apply button: background #888888, white text, padding 8px 16px, border-radius 5px, no border\n- Be encouraging and positive\n\nStructure:\n1. Header — \"Jobs That Need More Skills\"\n2. One card per job with title, company, score, reason\n3. Real apply link button for each job\n4. Note — \"Work on these skills to qualify next time!\"\n\nOutput ONLY raw HTML starting with <div and ending with </div>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2432,
+        -64
+      ],
+      "id": "ba754e87-0177-49aa-9bea-56771aa5457a",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {
+          "maxTokensToSample": 500
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        944
+      ],
+      "id": "086ab544-b034-4e04-8353-7a606f1dce67",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "5yEa1CUvOVnYpivG",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2368,
+        560
+      ],
+      "id": "423c08dc-7f9b-4d6c-a42e-51ce56493d73",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        560
+      ],
+      "id": "0168baba-12b4-4b98-a02a-2f07776dda20",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "sendTo": "kabaddinagarajuna@gmail.com",
+        "subject": "AI Job Hunter Results",
+        "message": "={{ $json.data[0].text }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2784,
+        560
+      ],
+      "id": "27569ed6-c4cb-4df2-a4ac-dcf6c7e8e552",
+      "name": "Send a message",
+      "webhookId": "fff07675-6f77-49bf-a027-ab24efdb6bf3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6J1brjWGJ7pV2PE3",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3008,
+        1056
+      ],
+      "id": "f5359fb0-b757-4491-9333-42edf0c83192",
+      "name": "Wait2",
+      "webhookId": "9fde2814-498d-4306-99b7-1d0f7e03f097"
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        928,
+        512
+      ],
+      "id": "897cd386-eff4-486a-a3e8-6bae65f798d0",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a job matcher. Analyze this CV and job listing.\n\nCV: {{ $('Edit Fields').item.json.resume }}\n\nJob Title: {{ $json.title }}\nCompany: {{ $json.company_name }}\nLocation: {{ $json.candidate_required_location }}\nSalary: {{ $json.salary }}\nApply Link: {{ $json.url }}\nDescription: {{ $json.description ? $json.description.substring(0, 300) : 'Not provided' }}\n\nReply with ONLY this JSON, nothing else:\n{\n  \"job_title\": \"job title here\",\n  \"company\": \"company name here\",\n  \"match_score\": 5,\n  \"match_reason\": \"reason here\",\n  \"salary\": \"salary here\",\n  \"remote\": \"Yes or No\",\n  \"apply_link\": \"url here\"\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        656
+      ],
+      "id": "3cf75fde-bad4-4fe6-a210-c3e58257745a",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write HTML email for this job:\nTitle: {{ JSON.parse($('Aggregate').first().json.data[0].text).job_title }}\nCompany: {{ JSON.parse($('Aggregate').first().json.data[0].text).company }}\nScore: {{ JSON.parse($('Aggregate').first().json.data[0].text).match_score }}\nLink: {{ JSON.parse($('Aggregate').first().json.data[0].text).apply_link }}\n\nOutput only HTML. Green apply button.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1760,
+        416
+      ],
+      "id": "a7cb1e41-f263-4a98-84fa-360c1872eed2",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a brief HTML section for non-matching jobs:\n\n{{ JSON.stringify($('Aggregate1').first().json.data) }}\n\nOutput ONLY raw HTML. No backticks. No code blocks.\nShow each job with title, company, score, reason, apply button.\nStart with <div and end with </div>",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1776,
+        736
+      ],
+      "id": "d8972729-347d-44e8-badd-4bccc2f6a967",
+      "name": "Basic LLM Chain2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "job matcher",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "job matcher": {
+      "main": [
+        []
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if match score>= 7": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        []
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        []
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "if match score>= 7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "96b3c384-d33f-4c45-956e-9869c5e7de43",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3a0bfd253d9ee161d2610c573bd1bf4b6054c56713b816e635a4deefbfe384bb"
+  },
+  "id": "LTuUu8wLMmCcEUDm",
+  "tags": []
+}
